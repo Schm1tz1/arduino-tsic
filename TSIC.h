@@ -8,7 +8,7 @@
 * Version 2
 *		Improvements:
 *		- Arduino > 1.0 compatible
-*		- corrected offset (about +2°C)
+*		- corrected offset (about +2Â°C)
 *		- code run time optimization
 *		- no freezing of system in case sensor gets unplugged
 *		- measure strobetime instead of constant waiting time (-> high temperature stable)
@@ -40,7 +40,8 @@
 #define TSIC_OFF()	digitalWrite(m_vcc_pin, LOW)
 #define TSIC_HIGH	digitalRead(m_signal_pin)
 #define TSIC_LOW	!digitalRead(m_signal_pin)
-#define Cancel()	if (timeout==0){return 0;}				// Cancel if sensor is disconnected
+#define TSIC_EXIT()	{TSIC_OFF(); return 0;}
+#define Cancel()	if (timeout > 10000){return 0;}				// Cancel if sensor is disconnected
 
 class TSIC {
 	public:

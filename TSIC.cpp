@@ -4,11 +4,26 @@
 *
 * Copyright: Rolf Wagner
 * Date: March 9th 2014
-*
+* 
+* Version 2.1 (changes by Matthias Eibl, 2015-03-31)
+* 		- if the TSIC returns an error, the Power PIN is 
+* 		  turned LOW (otherwise it produces errors as the 
+* 		  start for a healthy sensor is not defined properly.)
+* 		- the timeouts are optimized for a faster identification of 
+* 		  not connected sensors (if no sensor is connected, the 
+* 		  Data Pin will remain in state LOW. As the strobe is usually
+* 		  ~ 60us, it is sufficient to set the timeout to a value of
+* 		  <<100 loops in the second while loop "while (TSIC_LOW){..."
+* 		  in the function "TSIC::readSens". One cycle is -depending on
+* 		  the CPU frequency used- ~10us.)
+* 
+* 
+* 
+* 
 * Version 2
 *		Improvements:
 *		- Arduino > 1.0 compatible
-*		- corrected offset (about +2캜)
+*		- corrected offset (about +2째C)
 *		- code run time optimization
 *		- no freezing of system in case sensor gets unplugged
 *		- measure strobetime instead of constant waiting time (-> high temperature stable)
@@ -50,13 +65,13 @@ uint8_t TSIC::getTemperture(uint16_t *temp_value16){
 		TSIC_ON();
 		delayMicroseconds(50);     // wait for stabilization
 		if(TSIC::readSens(&temp_value1)){}			// get 1st byte
-		else return 0;
+		else TSIC_EXIT();
 		if(TSIC::readSens(&temp_value2)){}			// get 2nd byte
-		else return 0;
+		else TSIC_EXIT();
 		if(checkParity(&temp_value1)){}		// parity-check 1st byte
-		else return 0;
+		else TSIC_EXIT();
 		if(checkParity(&temp_value2)){}		// parity-check 2nd byte
-		else return 0;
+		else TSIC_EXIT();
 
 		TSIC_OFF();		// turn off sensor
 		*temp_value16 = (temp_value1 << 8) + temp_value2;
@@ -65,14 +80,14 @@ uint8_t TSIC::getTemperture(uint16_t *temp_value16){
 
 //-------------Unterprogramme-----------------------------------------------------------------------
 
-/*	Temperature conversion from uint to float in 캜 with 1 decimal place.
-	The calculation is speed-optimized at the cost of a sligtly worse temperature resolution (about -0,0366캜 @25캜).
+/*	Temperature conversion from uint to float in 째C with 1 decimal place.
+	The calculation is speed-optimized at the cost of a sligtly worse temperature resolution (about -0,0366째C @25째C).
 */
 float TSIC::calc_Celsius(uint16_t *temperature16){
 	uint16_t temp_value16 = 0;
 	float celsius = 0;
 	temp_value16 = ((*temperature16 * 250L) >> 8) - 500;			// calculate temperature *10, i.e. 26,4 = 264
-	celsius = temp_value16 / 10 + (float) (temp_value16 % 10) / 10;	// shift comma by 1 digit e.g. 26,4캜
+	celsius = temp_value16 / 10 + (float) (temp_value16 % 10) / 10;	// shift comma by 1 digit e.g. 26,4째C
 	return celsius;
 }
 
@@ -80,15 +95,16 @@ uint8_t TSIC::readSens(uint16_t *temp_value){
 	uint16_t strobelength = 0;
 	uint16_t strobetemp = 0;
 	uint8_t dummy = 0;
-	uint16_t timeout = 0;
+	uint16_t timeout = 0;	// max value for timeout is set in .h file
 	while (TSIC_HIGH){	// wait until start bit starts
 		timeout++;
 		delayMicroseconds(5);
 		Cancel();
 	}
-	// Measure strobe time
+	// Measure strobe time, a healthy sensor will go to LOW within a few loops (~60us)
+	// if no sensor is connected, the timeout cancels the operation (-> 100cycles are more than enough for this)
 	strobelength = 0;
-	timeout = 0;
+	timeout = 9900;		// max value for timeout is set in .h file
 	while (TSIC_LOW) {    // wait for rising edge
 		strobelength++;
 		timeout++;

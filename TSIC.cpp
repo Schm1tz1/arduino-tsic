@@ -98,7 +98,7 @@ uint8_t TSIC::readSens(uint16_t *temp_value){
 	uint16_t timeout = 0;	// max value for timeout is set in .h file
 	while (TSIC_HIGH){	// wait until start bit starts
 		timeout++;
-		delayMicroseconds(5);
+		delayMicroseconds(10);
 		Cancel();
 	}
 	// Measure strobe time, a healthy sensor will go to LOW within a few loops (~60us)
@@ -108,7 +108,7 @@ uint8_t TSIC::readSens(uint16_t *temp_value){
 	while (TSIC_LOW) {    // wait for rising edge
 		strobelength++;
 		timeout++;
-		delayMicroseconds(5);
+		delayMicroseconds(10);
 		Cancel();
 	}
 	for (uint8_t i=0; i<9; i++) {
@@ -125,7 +125,7 @@ uint8_t TSIC::readSens(uint16_t *temp_value){
 		while (strobetemp--) {
 			timeout++;
 			dummy++;
-			delayMicroseconds(5);
+			delayMicroseconds(10);
 			Cancel();
 		}
 		*temp_value <<= 1;

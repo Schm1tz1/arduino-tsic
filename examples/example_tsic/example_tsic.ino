@@ -18,7 +18,7 @@ void setup() {
 
 void loop() {
   
-  if (Sensor1.getTemperture(&temperature)) {
+  if (Sensor1.getTemperature(&temperature)) {
     Serial.print("uint_16: ");
     Serial.println(temperature);
     Temperatur_C = Sensor1.calc_Celsius(&temperature);

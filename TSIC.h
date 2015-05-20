@@ -46,7 +46,7 @@
 class TSIC {
 	public:
 		explicit TSIC(uint8_t signal_pin, uint8_t vcc_pin);
-		uint8_t getTemperture(uint16_t *temp_value16);
+		uint8_t getTemperature(uint16_t *temp_value16);
 		float calc_Celsius(uint16_t *temperature16);
 	private:
 		uint8_t m_signal_pin;

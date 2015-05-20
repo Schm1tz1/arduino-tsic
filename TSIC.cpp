@@ -58,7 +58,7 @@ TSIC::TSIC(uint8_t signal_pin, uint8_t vcc_pin)
 }
 
 // read temperature
-uint8_t TSIC::getTemperture(uint16_t *temp_value16){
+uint8_t TSIC::getTemperature(uint16_t *temp_value16){
 		uint16_t temp_value1 = 0;
 		uint16_t temp_value2 = 0;
 

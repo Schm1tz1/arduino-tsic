@@ -5,6 +5,17 @@
 * Copyright: Rolf Wagner
 * Date: March 9th 2014
 * 
+* Version 2.2 (changes by STefan Gmeiner, 2016-01-25)
+*     - integrate parity check during sensor reading
+*     - replace loop counting by delay measuring to ensure consistent
+*       behaviour between loops and when interrupts delay the loop
+*       unexpectly
+*     - simplify celsius calculation
+*     - replace pre-processor functions by inline functions to reduce name conflicts
+*     - pre compute the data port and mask for faster pin access (instead of
+*       digitalRead)
+*     - now only 210 bytes for dynamic memory is used
+*     
 * Version 2.1 (changes by Matthias Eibl, 2015-03-31)
 * 		- if the TSIC returns an error, the Power PIN is 
 * 		  turned LOW (otherwise it produces errors as the 
@@ -51,107 +62,88 @@
 
 // Initialize inputs/outputs
 TSIC::TSIC(uint8_t signal_pin, uint8_t vcc_pin)
-	: m_signal_pin(signal_pin), m_vcc_pin(vcc_pin) 
+	: m_vcc_pin(vcc_pin) 
 {
     pinMode(m_vcc_pin, OUTPUT);
-    pinMode(m_signal_pin, INPUT);
+    pinMode(signal_pin, INPUT);
+    m_signal_input_reg = portInputRegister(digitalPinToPort(signal_pin));
+    m_signal_mask = digitalPinToBitMask(signal_pin);
 }
 
 // read temperature
 uint8_t TSIC::getTemperature(uint16_t *temp_value16){
-		uint16_t temp_value1 = 0;
-		uint16_t temp_value2 = 0;
-
-		TSIC_ON();
+		switchOn();
 		delayMicroseconds(50);     // wait for stabilization
-		if(TSIC::readSens(&temp_value1)){}			// get 1st byte
-		else TSIC_EXIT();
-		if(TSIC::readSens(&temp_value2)){}			// get 2nd byte
-		else TSIC_EXIT();
-		if(checkParity(&temp_value1)){}		// parity-check 1st byte
-		else TSIC_EXIT();
-		if(checkParity(&temp_value2)){}		// parity-check 2nd byte
-		else TSIC_EXIT();
-
-		TSIC_OFF();		// turn off sensor
-		*temp_value16 = (temp_value1 << 8) + temp_value2;
-		return 1;
+    uint8_t ok = readSens(((uint8_t*)temp_value16)+1);
+    ok = ok && readSens(((uint8_t*)temp_value16)+0);
+    switchOff();
+    return ok;
 }
 
 //-------------Unterprogramme-----------------------------------------------------------------------
 
-/*	Temperature conversion from uint to float in °C with 1 decimal place.
-	The calculation is speed-optimized at the cost of a sligtly worse temperature resolution (about -0,0366°C @25°C).
+/*	Temperature conversion from uint to float in °C.
 */
 float TSIC::calc_Celsius(uint16_t *temperature16){
-	uint16_t temp_value16 = 0;
-	float celsius = 0;
-	temp_value16 = ((*temperature16 * 250L) >> 8) - 500;			// calculate temperature *10, i.e. 26,4 = 264
-	celsius = temp_value16 / 10 + (float) (temp_value16 % 10) / 10;	// shift comma by 1 digit e.g. 26,4°C
-	return celsius;
+  return (*temperature16 * 200.0) / 2047.0 - 50.0;
 }
 
-uint8_t TSIC::readSens(uint16_t *temp_value){
-	uint16_t strobelength = 0;
-	uint16_t strobetemp = 0;
-	uint8_t dummy = 0;
-	uint16_t timeout = 0;	// max value for timeout is set in .h file
-	while (TSIC_HIGH){	// wait until start bit starts
-		timeout++;
-		delayMicroseconds(10);
-		Cancel();
-	}
-	// Measure strobe time, a healthy sensor will go to LOW within a few loops (~60us)
-	// if no sensor is connected, the timeout cancels the operation (-> 100cycles are more than enough for this)
-	strobelength = 0;
-	timeout = 9900;		// max value for timeout is set in .h file
-	while (TSIC_LOW) {    // wait for rising edge
-		strobelength++;
-		timeout++;
-		delayMicroseconds(10);
-		Cancel();
-	}
-	for (uint8_t i=0; i<9; i++) {
-		// Wait for bit start
-		timeout = 0;
-		while (TSIC_HIGH) { // wait for falling edge
-			timeout++;
-			Cancel();
-		}
-		// Delay strobe length
-		timeout = 0;
-		dummy = 0;
-		strobetemp = strobelength;
-		while (strobetemp--) {
-			timeout++;
-			dummy++;
-			delayMicroseconds(10);
-			Cancel();
-		}
-		*temp_value <<= 1;
-		// Read bit
-		if (TSIC_HIGH) {
-			*temp_value |= 1;
-		}
-		// Wait for bit end
-		timeout = 0;
-		while (TSIC_LOW) {		// wait for rising edge
-			timeout++;
-			Cancel();
-		}
-	}
-	return 1;
+uint8_t TSIC::readSens(uint8_t *temp_value){
+  int32_t start;
+  int16_t strobe;
+  uint8_t parity = 0;
+  uint16_t data = 0;
+
+  // wait for strobe start (falling edge)
+  start = micros();
+  while (readSignal())
+  {
+    // 32-bit to support longer timeouts on start bit
+    if (((int32_t)micros()) - start > StartTimeout) return 0;
+  }
+
+  // measure strobe length (raising edge)
+  start = micros();
+  while (!readSignal())
+  {
+    // 16-bit -> max. timeout 32000us
+    if (((int16_t)micros()) - ((int16_t)start) > BitTimeout) return 0;
+  }
+  strobe = micros() - start;
+  // strobe is nominal about 62.5us
+  if (strobe > MaxStrobe) return 0;
+  
+  for (uint8_t i=0; i<9; i++) {
+    
+    // Wait for bit start
+    start = micros();
+    while (readSignal()) { // wait for falling edge
+      // 16-bit -> max. timeout 32000us
+      if (((int16_t)micros()) - ((int16_t)start) > BitTimeout) return 0;
+    }
+    
+    // Delay strobe length
+    start = micros();
+    while (((int16_t)micros()) - ((int16_t)start) < strobe) {
+    }
+    data <<= 1;
+    if (readSignal()) {
+      data |= 1;
+      parity++;
+    }
+    
+    // Wait for bit end
+    start = micros();
+    while (!readSignal()) {   // wait for rising edge
+      if (((int16_t)micros()) - ((int16_t)start) > BitTimeout) return 0;
+    }
+  }
+
+  // remove parity
+  data >>= 1;
+  *temp_value = data;
+  
+  return (parity % 2) ? 0 : 1;
 }
 
-uint8_t TSIC::checkParity(uint16_t *temp_value) {
-	uint8_t parity = 0;
 
-	for (uint8_t i = 0; i < 9; i++) {
-		if (*temp_value & (1 << i))
-			parity++;
-	}
-	if (parity % 2)
-		return 0;				// wrong parity
-	*temp_value >>= 1;          // delete parity bit
-	return 1;
-}

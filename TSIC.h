@@ -36,23 +36,23 @@
 
 #include "Arduino.h"
 
-#define TSIC_ON()	digitalWrite(m_vcc_pin, HIGH)
-#define TSIC_OFF()	digitalWrite(m_vcc_pin, LOW)
-#define TSIC_HIGH	digitalRead(m_signal_pin)
-#define TSIC_LOW	!digitalRead(m_signal_pin)
-#define TSIC_EXIT()	{TSIC_OFF(); return 0;}
-#define Cancel()	if (timeout > 10000){return 0;}				// Cancel if sensor is disconnected
-
 class TSIC {
 	public:
 		explicit TSIC(uint8_t signal_pin, uint8_t vcc_pin);
 		uint8_t getTemperature(uint16_t *temp_value16);
 		float calc_Celsius(uint16_t *temperature16);
 	private:
-		uint8_t m_signal_pin;
+    static const int32_t StartTimeout = 60000; 
+    static const int16_t BitTimeout = 200;
+    static const int16_t MaxStrobe = 80;
 		uint8_t m_vcc_pin;
-		uint8_t readSens(uint16_t *temp_value);
-		uint8_t checkParity(uint16_t *temp_value);
+    volatile uint8_t* m_signal_input_reg;
+    uint8_t m_signal_mask;
+    uint8_t readSens(uint8_t *temp_value);
+    uint8_t readSignal() { return (*m_signal_input_reg) & m_signal_mask ? HIGH : LOW; }
+    inline void switchOn() { digitalWrite(m_vcc_pin, HIGH); }
+    inline void switchOff() { digitalWrite(m_vcc_pin, LOW); }
 };
 
 #endif /* TSIC_H */
+

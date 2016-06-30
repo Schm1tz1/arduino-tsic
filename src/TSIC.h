@@ -1,11 +1,25 @@
 /**
-* Library for reading TSIC digital temperature sensors like 305 and 206
+* Library for reading TSIC digital temperature sensors 20x, 30x, 50x
 * using the Arduino platform.
 *
-* Copyright: Rolf Wagner
-* Date: March 9th 2014
-*
-* Version 2
+* Version 2.2 (by Roman Schmitz, 2016-06-30)
+*		- added calculation for 50x sensors
+*		- a parameter in the constructor is used to select sensor type, standard is set to 20x/30x for backward compatibility
+*		- example was chaged to show usage of sensor types
+* 
+* Version 2.1 (changes by Matthias Eibl, 2015-03-31)
+* 		- if the TSIC returns an error, the Power PIN is 
+* 		  turned LOW (otherwise it produces errors as the 
+* 		  start for a healthy sensor is not defined properly.)
+* 		- the timeouts are optimized for a faster identification of 
+* 		  not connected sensors (if no sensor is connected, the 
+* 		  Data Pin will remain in state LOW. As the strobe is usually
+* 		  ~ 60us, it is sufficient to set the timeout to a value of
+* 		  <<100 loops in the second while loop "while (TSIC_LOW){..."
+* 		  in the function "TSIC::readSens". One cycle is -depending on
+* 		  the CPU frequency used- ~10us.)
+* 
+* Version 2 (by Rolf Wagner, 2014-03-09)
 *		Improvements:
 *		- Arduino > 1.0 compatible
 *		- corrected offset (about +2°C)
@@ -36,6 +50,10 @@
 
 #include "Arduino.h"
 
+#define TSIC_20x	0
+#define TSIC_30x	0
+#define TSIC_50x	1
+
 #define TSIC_ON()	digitalWrite(m_vcc_pin, HIGH)
 #define TSIC_OFF()	digitalWrite(m_vcc_pin, LOW)
 #define TSIC_HIGH	digitalRead(m_signal_pin)
@@ -45,12 +63,13 @@
 
 class TSIC {
 	public:
-		explicit TSIC(uint8_t signal_pin, uint8_t vcc_pin);
+		explicit TSIC(uint8_t signal_pin, uint8_t vcc_pin, uint8_t sens_type=TSIC_30x);
 		uint8_t getTemperature(uint16_t *temp_value16);
 		float calc_Celsius(uint16_t *temperature16);
 	private:
 		uint8_t m_signal_pin;
 		uint8_t m_vcc_pin;
+		uint8_t m_sens_type;
 		uint8_t readSens(uint16_t *temp_value);
 		uint8_t checkParity(uint16_t *temp_value);
 };

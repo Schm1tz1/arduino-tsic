@@ -6,8 +6,9 @@
 #include "TSIC.h"       // include the library
 
 // instantiate the library, representing the sensor
-TSIC Sensor1(4, 2);    // Signalpin, VCCpin
-//TSIC Sensor2(5, 2);  // Signalpin, VCCpin, NOTE: we can use the same VCCpin to power both sensors
+TSIC Sensor1(4, 2);    // Signalpin, VCCpin, Sensor Type
+//TSIC Sensor1(4, 2, TSIC_30x);    // Signalpin, VCCpin, Sensor Type
+//TSIC Sensor2(5, 2, TSIC_50x);  // Signalpin, VCCpin, Sensor Type NOTE: we can use the same VCCpin to power several sensors
 
 uint16_t temperature = 0;
 float Temperatur_C = 0;

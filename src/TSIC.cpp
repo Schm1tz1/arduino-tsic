@@ -1,9 +1,11 @@
 /**
-* Library for reading TSIC digital temperature sensors like 305 and 206
+* Library for reading TSIC digital temperature sensors 20x, 30x, 50x
 * using the Arduino platform.
 *
-* Copyright: Rolf Wagner
-* Date: March 9th 2014
+* Version 2.2 (by Roman Schmitz, 2016-06-30)
+*		- added calculation for 50x sensors
+*		- a parameter in the constructor is used to select sensor type, standard is set to 20x/30x for backward compatibility
+*		- example was chaged to show usage of sensor types
 * 
 * Version 2.1 (changes by Matthias Eibl, 2015-03-31)
 * 		- if the TSIC returns an error, the Power PIN is 
@@ -17,10 +19,7 @@
 * 		  in the function "TSIC::readSens". One cycle is -depending on
 * 		  the CPU frequency used- ~10us.)
 * 
-* 
-* 
-* 
-* Version 2
+* Version 2 (by Rolf Wagner, 2014-03-09)
 *		Improvements:
 *		- Arduino > 1.0 compatible
 *		- corrected offset (about +2°C)
@@ -50,8 +49,8 @@
 #include "TSIC.h"
 
 // Initialize inputs/outputs
-TSIC::TSIC(uint8_t signal_pin, uint8_t vcc_pin)
-	: m_signal_pin(signal_pin), m_vcc_pin(vcc_pin) 
+TSIC::TSIC(uint8_t signal_pin, uint8_t vcc_pin, uint8_t sens_type)
+	: m_signal_pin(signal_pin), m_vcc_pin(vcc_pin), m_sens_type(sens_type)
 {
     pinMode(m_vcc_pin, OUTPUT);
     pinMode(m_signal_pin, INPUT);
@@ -86,7 +85,15 @@ uint8_t TSIC::getTemperature(uint16_t *temp_value16){
 float TSIC::calc_Celsius(uint16_t *temperature16){
 	uint16_t temp_value16 = 0;
 	float celsius = 0;
-	temp_value16 = ((*temperature16 * 250L) >> 8) - 500;			// calculate temperature *10, i.e. 26,4 = 264
+
+	// optimized version of (temp_value/2047*(HT-LT)+LT) 
+	// calculate temperature *10, i.e. 26,4 = 264
+	if(m_sens_type==1) { // 50x sensors: LT=-10, HT=60
+		temp_value16 = ((*temperature16 * 175L) >> 9) - 100;
+	}
+	else { // 20x,30x sensors: LT=-50, HT=150
+		temp_value16 = ((*temperature16 * 250L) >> 8) - 500;
+	}
 	celsius = temp_value16 / 10 + (float) (temp_value16 % 10) / 10;	// shift comma by 1 digit e.g. 26,4°C
 	return celsius;
 }

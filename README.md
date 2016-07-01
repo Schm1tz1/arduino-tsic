@@ -1,15 +1,8 @@
 [arduino-tsic][1]
 ============
 This project is a library for TSIC digital temperature sensors (type 206/306/506 and similar). 
-It is based on the version 2 from Rolf Wagner from 2014.03.09 which can be found on [Arduino Playground][2]. The TSIC sensors feature a very hich accuracy and can be read out roughly every 100ms using the ZACwire-rotocol, more informations can be found in the [datasheet][3]. The code is optimized for high speed and low memory consumption as described in the release notes from version 2:
-
-- Arduino > 1.0 compatible
-- corrected offset (about +2°C)
-- code run time optimization
-- no freezing of system in case sensor gets unplugged
-- measure strobetime instead of constant waiting time (-> high temperature stable)
-- code cleanup
-- space optimization, now only 239 byte
+It is based on the version 2 from Rolf Wagner from 2014.03.09 which can be found on [Arduino Playground][2]. The TSIC sensors feature a very hich accuracy and can be read out roughly every 100ms using the ZACwire-rotocol, more informations can be found in the [datasheet][3]. Calcularions for different sensors as the 20x,30x and 50x series are included, only a flag is neede to select the sensor type which is 20x/30x by default.
+The code is optimized for high speed and low memory consumption. The calculation routines use constant integer calculations and bit shifts to save computing time which is in case of a standard Atmega328p roughly a factor of 1.5-2 at no loss of computational accuracy.
 
 Installing the library
 ======================

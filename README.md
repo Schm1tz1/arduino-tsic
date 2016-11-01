@@ -11,6 +11,7 @@ For installation just download the contents of this repository into TSIC-folder 
 Connecting your sensor
 =====================
 This part is pretty easy. The TSIC-Sensor needs 3 pins to be connected - Vcc, GND and Signal as shown in the datasheet. No pull-up resistors or additional components are needed, so this can be done in a plug-and-play-style, for example plugging the TO-92-Sensor to GND-13-12 of an Arduino UNO. Connect your sensor and configure the corresponding pins in the TSIC-constructor as shown in the example.
+NEW feature: external powering is possible - simply connect your sensor to GND and an external VCC instead of your AVR-PIN for powering. Check the example for usage.
 
 [1]: https://github.com/Schm1tz1/arduino-tsic
 [2]: http://playground.arduino.cc/Code/Tsic

@@ -2,6 +2,11 @@
 * Library for reading TSIC digital temperature sensors 20x, 30x, 50x
 * using the Arduino platform.
 *
+* Version 2.3 (by Roman Schmitz, 2016-11-01)
+*		- sensor can be operated with external VCC, so no extra pin is neccessary
+*		- standard vcc-pin set to 255 (NO_VCC_PIN)
+*		- example for external powering
+*
 * Version 2.2 (by Roman Schmitz, 2016-06-30)
 *		- added calculation for 50x sensors
 *		- a parameter in the constructor is used to select sensor type, standard is set to 20x/30x for backward compatibility

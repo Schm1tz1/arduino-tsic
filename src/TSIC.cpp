@@ -2,6 +2,11 @@
 * Library for reading TSIC digital temperature sensors 20x, 30x, 50x
 * using the Arduino platform.
 *
+* Version 2.3 (by Roman Schmitz, 2016-11-01)
+*		- sensor can be operated with external VCC, so no extra pin is neccessary
+*		- standard vcc-pin set to 255 (NO_VCC_PIN)
+*		- example for external powering
+*
 * Version 2.2 (by Roman Schmitz, 2016-06-30)
 *		- added calculation for 50x sensors
 *		- a parameter in the constructor is used to select sensor type, standard is set to 20x/30x for backward compatibility
@@ -52,7 +57,7 @@
 TSIC::TSIC(uint8_t signal_pin, uint8_t vcc_pin, uint8_t sens_type)
 	: m_signal_pin(signal_pin), m_vcc_pin(vcc_pin), m_sens_type(sens_type)
 {
-    pinMode(m_vcc_pin, OUTPUT);
+    if(m_vcc_pin!=NO_VCC_PIN) pinMode(m_vcc_pin, OUTPUT);
     pinMode(m_signal_pin, INPUT);
 }
 
@@ -61,7 +66,7 @@ uint8_t TSIC::getTemperature(uint16_t *temp_value16){
 		uint16_t temp_value1 = 0;
 		uint16_t temp_value2 = 0;
 
-		TSIC_ON();
+		if(m_vcc_pin!=NO_VCC_PIN) TSIC_ON();
 		delayMicroseconds(50);     // wait for stabilization
 		if(TSIC::readSens(&temp_value1)){}			// get 1st byte
 		else TSIC_EXIT();
@@ -72,7 +77,7 @@ uint8_t TSIC::getTemperature(uint16_t *temp_value16){
 		if(checkParity(&temp_value2)){}		// parity-check 2nd byte
 		else TSIC_EXIT();
 
-		TSIC_OFF();		// turn off sensor
+		if(m_vcc_pin!=NO_VCC_PIN) TSIC_OFF();		// turn off sensor
 		*temp_value16 = (temp_value1 << 8) + temp_value2;
 		return 1;
 }

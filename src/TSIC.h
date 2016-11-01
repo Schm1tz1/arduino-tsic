@@ -54,6 +54,8 @@
 #define TSIC_30x	0
 #define TSIC_50x	1
 
+#define NO_VCC_PIN 255
+
 #define TSIC_ON()	digitalWrite(m_vcc_pin, HIGH)
 #define TSIC_OFF()	digitalWrite(m_vcc_pin, LOW)
 #define TSIC_HIGH	digitalRead(m_signal_pin)
@@ -63,7 +65,7 @@
 
 class TSIC {
 	public:
-		explicit TSIC(uint8_t signal_pin, uint8_t vcc_pin, uint8_t sens_type=TSIC_30x);
+		explicit TSIC(uint8_t signal_pin, uint8_t vcc_pin=NO_VCC_PIN, uint8_t sens_type=TSIC_30x);
 		uint8_t getTemperature(uint16_t *temp_value16);
 		float calc_Celsius(uint16_t *temperature16);
 	private:

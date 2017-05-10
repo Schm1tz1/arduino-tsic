@@ -88,7 +88,7 @@ uint8_t TSIC::getTemperature(uint16_t *temp_value16){
 	The calculation is speed-optimized at the cost of a sligtly worse temperature resolution (about -0,0366°C @25°C).
 */
 float TSIC::calc_Celsius(uint16_t *temperature16){
-	uint16_t temp_value16 = 0;
+	int16_t temp_value16 = 0;
 	float celsius = 0;
 
 	// optimized version of (temp_value/2047*(HT-LT)+LT) 

@@ -93,8 +93,11 @@ float TSIC::calc_Celsius(uint16_t *temperature16){
 
 	// optimized version of (temp_value/2047*(HT-LT)+LT) 
 	// calculate temperature *10, i.e. 26,4 = 264
-	if(m_sens_type==1) { // 50x sensors: LT=-10, HT=60
+	if(m_sens_type==TSIC_50x) { // 50x sensors: LT=-10, HT=60
 		temp_value16 = ((*temperature16 * 175L) >> 9) - 100;
+	}
+	else if(m_sens_type==TSIC_x16) { // 516/716 sensors: LT=-10, HT=60, scale by 16383 instead of 2047
+	    temp_value16 = ((*temperature16 * 175L) >> 12) - 100;
 	}
 	else { // 20x,30x sensors: LT=-50, HT=150
 		temp_value16 = ((*temperature16 * 250L) >> 8) - 500;

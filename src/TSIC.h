@@ -58,6 +58,7 @@
 #define TSIC_20x	0
 #define TSIC_30x	0
 #define TSIC_50x	1
+#define TSIC_x16	2
 
 #define NO_VCC_PIN 255
 

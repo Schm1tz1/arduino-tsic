@@ -10,7 +10,9 @@ TSIC Sensor1(4, 2);    // Signalpin, VCCpin, Sensor Type
 //TSIC Sensor1(4);    // only Signalpin, VCCpin unused by default
 //TSIC Sensor1(4, NO_VCC_PIN, TSIC_50x);    // external powering of 50x-Sensor
 //TSIC Sensor1(4, 2, TSIC_30x);    // Signalpin, VCCpin, Sensor Type
+//TSIC Sensor1(4, NO_VCC_PIN, TSIC_x16);    // external powering of x16-Sensor
 //TSIC Sensor2(5, 2, TSIC_50x);  // Signalpin, VCCpin, Sensor Type NOTE: we can use the same VCCpin to power several sensors
+//TSIC Sensor2(5, 2, TSIC_x16);  // Signalpin, VCCpin, Sensor Type NOTE: we can use the same VCCpin to power several sensors
 
 uint16_t temperature = 0;
 float Temperatur_C = 0;

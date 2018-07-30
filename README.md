@@ -18,3 +18,7 @@ NEW feature: external powering is possible - simply connect your sensor to GND a
 [2]: http://playground.arduino.cc/Code/Tsic
 [3]: http://playground.arduino.cc/uploads/Code/TSIC_Datasheet.zip
 [4]: https://www.ist-ag.com/sites/default/files/ATTSic_E.pdf
+
+Status
+======
+This is the (non-stable) development version that still needs to be tested before it is added to the main branch. As the new 716 sensors are not yet available, a message was sent to the manufacturer to get a sample sensor for development. This code will be tested and merged as soon as a sensor is available and tested.

@@ -94,10 +94,10 @@ float TSIC::calc_Celsius(uint16_t *temperature16){
 	// optimized version of (temp_value/2047*(HT-LT)+LT) 
 	// calculate temperature *10, i.e. 26,4 = 264
 	if(m_sens_type==1) { // 50x sensors: LT=-10, HT=60
-		temp_value16 = ((*temperature16 * 175L) >> 9) - 100;
+		temp_value16 = ((*temperature16 * 175L) >> 9) - 99;
 	}
 	else { // 20x,30x sensors: LT=-50, HT=150
-		temp_value16 = ((*temperature16 * 250L) >> 8) - 500;
+		temp_value16 = ((*temperature16 * 250L) >> 8) - 499;
 	}
 	celsius = temp_value16 / 10 + (float) (temp_value16 % 10) / 10;	// shift comma by 1 digit e.g. 26,4°C
 	return celsius;
